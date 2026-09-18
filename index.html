@@ -168,21 +168,17 @@
 
         try {
 
-          const response = await fetch(scriptURL, {
-            method: "POST",
-            body: JSON.stringify(data)
-          });
+          await fetch(scriptURL, {
+  method: "POST",
+  mode: "no-cors",
+  headers: {
+    "Content-Type": "text/plain"
+  },
+  body: JSON.stringify(data)
+});
 
-          const result = await response.json();
-
-          if (result.success) {
-
-            status.innerText = "File berhasil diupload!";
-            document.getElementById("uploadForm").reset();
-
-          } else {
-
-            status.innerText = "Upload gagal: " + result.message;
+status.innerText = "File berhasil dikirim!";
+document.getElementById("uploadForm").reset();
 
           }
 
