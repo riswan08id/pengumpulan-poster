@@ -60,10 +60,12 @@
       background: #222;
       color: white;
       font-size: 16px;
+      cursor: pointer;
     }
 
     button:disabled {
       background: #999;
+      cursor: not-allowed;
     }
 
     #status {
@@ -82,7 +84,8 @@
 
     <form id="uploadForm">
 
-      <label>Nama</label>
+      <label for="nama">Nama</label>
+
       <input
         type="text"
         id="nama"
@@ -90,7 +93,8 @@
         required
       >
 
-      <label>Prodi</label>
+      <label for="prodi">Prodi</label>
+
       <input
         type="text"
         id="prodi"
@@ -98,7 +102,8 @@
         required
       >
 
-      <label>Angkatan</label>
+      <label for="angkatan">Angkatan</label>
+
       <input
         type="number"
         id="angkatan"
@@ -106,7 +111,8 @@
         required
       >
 
-      <label>File Poster</label>
+      <label for="file">File Poster</label>
+
       <input
         type="file"
         id="file"
@@ -123,81 +129,149 @@
 
   </div>
 
+
   <script>
 
+    // URL Google Apps Script
     const scriptURL =
       "https://script.google.com/macros/s/AKfycbwVHFOcgIImk7xkmCqx49qJPyzGmLot8NKaqTEI9_QcZsuHZ96bel-fOOmfq43fvhg/exec";
 
 
-    document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+    document
+      .getElementById("uploadForm")
+      .addEventListener("submit", function(e) {
 
-      e.preventDefault();
+        e.preventDefault();
 
-      const nama = document.getElementById("nama").value;
-      const prodi = document.getElementById("prodi").value;
-      const angkatan = document.getElementById("angkatan").value;
-      const fileInput = document.getElementById("file");
-      const file = fileInput.files[0];
+        const nama =
+          document.getElementById("nama").value;
 
-      const button = document.getElementById("uploadButton");
-      const status = document.getElementById("status");
+        const prodi =
+          document.getElementById("prodi").value;
 
-      if (!file) {
-        status.innerText = "Pilih file terlebih dahulu.";
-        return;
-      }
+        const angkatan =
+          document.getElementById("angkatan").value;
 
-      button.disabled = true;
-      button.innerText = "Mengupload...";
-      status.innerText = "Sedang mengupload file...";
+        const fileInput =
+          document.getElementById("file");
 
-      const reader = new FileReader();
+        const file =
+          fileInput.files[0];
 
-      reader.onload = async function() {
+        const button =
+          document.getElementById("uploadButton");
 
-        const base64File = reader.result.split(",")[1];
+        const status =
+          document.getElementById("status");
 
-        const data = {
-          nama: nama,
-          prodi: prodi,
-          angkatan: angkatan,
-          fileName: file.name,
-          mimeType: file.type,
-          fileData: base64File
-        };
 
-        try {
+        // Pastikan file dipilih
+        if (!file) {
 
-          await fetch(scriptURL, {
-  method: "POST",
-  mode: "no-cors",
-  headers: {
-    "Content-Type": "text/plain"
-  },
-  body: JSON.stringify(data)
-});
+          status.innerText =
+            "Pilih file terlebih dahulu.";
 
-status.innerText = "File berhasil dikirim!";
-document.getElementById("uploadForm").reset();
-
-          }
-
-        } catch (error) {
-
-          status.innerText = "Terjadi kesalahan saat mengupload.";
-
-          console.error(error);
+          return;
 
         }
 
-        button.disabled = false;
-        button.innerText = "Upload";
 
-      };
+        // Ubah tampilan tombol
+        button.disabled = true;
 
-      reader.readAsDataURL(file);
+        button.innerText =
+          "Mengupload...";
 
-    });
+        status.innerText =
+          "Sedang mengupload file...";
+
+
+        // Membaca file
+        const reader =
+          new FileReader();
+
+
+        reader.onload = async function() {
+
+          try {
+
+            // Ambil data Base64 dari file
+            const base64File =
+              reader.result.split(",")[1];
+
+
+            // Data yang dikirim ke Apps Script
+            const data = {
+
+              nama: nama,
+
+              prodi: prodi,
+
+              angkatan: angkatan,
+
+              fileName: file.name,
+
+              mimeType: file.type,
+
+              fileData: base64File
+
+            };
+
+
+            // Kirim ke Google Apps Script
+            await fetch(scriptURL, {
+
+              method: "POST",
+
+              mode: "no-cors",
+
+              headers: {
+
+                "Content-Type":
+                  "text/plain"
+
+              },
+
+              body:
+                JSON.stringify(data)
+
+            });
+
+
+            // Karena no-cors tidak bisa membaca
+            // response dari Google Apps Script,
+            // kita tampilkan pesan berhasil
+            status.innerText =
+              "File berhasil dikirim!";
+
+            document
+              .getElementById("uploadForm")
+              .reset();
+
+
+          } catch (error) {
+
+            console.error(error);
+
+            status.innerText =
+              "Terjadi kesalahan saat mengupload.";
+
+          }
+
+
+          // Aktifkan tombol kembali
+          button.disabled = false;
+
+          button.innerText =
+            "Upload";
+
+        };
+
+
+        // Mulai membaca file
+        reader.readAsDataURL(file);
+
+      });
 
   </script>
 
