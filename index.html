@@ -1,90 +1,162 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>Pengumpulan Poster</title>
 
+
   <style>
+
     * {
       box-sizing: border-box;
       font-family: Arial, sans-serif;
     }
 
+
     body {
+
       margin: 0;
+
       min-height: 100vh;
+
       background: #f5f5f5;
+
       display: flex;
+
       justify-content: center;
+
       align-items: center;
+
       padding: 20px;
+
     }
+
 
     .container {
+
       width: 100%;
+
       max-width: 450px;
+
       background: white;
+
       padding: 25px;
+
       border-radius: 15px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+
+      box-shadow:
+        0 5px 20px rgba(0,0,0,0.1);
+
     }
+
 
     h2 {
+
       text-align: center;
+
       margin-bottom: 25px;
+
     }
+
 
     label {
+
       display: block;
+
       margin-top: 15px;
+
       margin-bottom: 7px;
+
       font-weight: bold;
+
     }
+
 
     input {
+
       width: 100%;
+
       padding: 12px;
+
       border: 1px solid #ccc;
+
       border-radius: 8px;
+
       font-size: 15px;
+
     }
+
 
     button {
+
       width: 100%;
+
       margin-top: 25px;
+
       padding: 13px;
+
       border: none;
+
       border-radius: 8px;
+
       background: #222;
+
       color: white;
+
       font-size: 16px;
+
       cursor: pointer;
+
     }
+
 
     button:disabled {
+
       background: #999;
+
       cursor: not-allowed;
+
     }
 
+
     #status {
+
       text-align: center;
+
       margin-top: 15px;
+
       font-size: 14px;
+
     }
+
   </style>
+
 </head>
+
 
 <body>
 
+
   <div class="container">
+
 
     <h2>Pengumpulan Poster</h2>
 
+
     <form id="uploadForm">
 
-      <label for="nama">Nama</label>
+
+      <label for="nama">
+        Nama
+      </label>
 
       <input
         type="text"
@@ -93,7 +165,10 @@
         required
       >
 
-      <label for="prodi">Prodi</label>
+
+      <label for="prodi">
+        Prodi
+      </label>
 
       <input
         type="text"
@@ -102,7 +177,10 @@
         required
       >
 
-      <label for="angkatan">Angkatan</label>
+
+      <label for="angkatan">
+        Angkatan
+      </label>
 
       <input
         type="number"
@@ -111,7 +189,10 @@
         required
       >
 
-      <label for="file">File Poster</label>
+
+      <label for="file">
+        File Poster
+      </label>
 
       <input
         type="file"
@@ -119,53 +200,87 @@
         required
       >
 
-      <button type="submit" id="uploadButton">
+
+      <button
+        type="submit"
+        id="uploadButton"
+      >
         Upload
       </button>
 
+
       <div id="status"></div>
 
+
     </form>
+
 
   </div>
 
 
+  <!--
+    Iframe tersembunyi.
+    Digunakan untuk menerima hasil dari Apps Script
+    tanpa reload halaman utama.
+  -->
+
+  <iframe
+    name="uploadFrame"
+    id="uploadFrame"
+    style="display:none;"
+  ></iframe>
+
+
   <script>
 
-    // URL Google Apps Script
+
     const scriptURL =
       "https://script.google.com/macros/s/AKfycbwVHFOcgIImk7xkmCqx49qJPyzGmLot8NKaqTEI9_QcZsuHZ96bel-fOOmfq43fvhg/exec";
 
 
-    document
-      .getElementById("uploadForm")
-      .addEventListener("submit", function(e) {
+    const form =
+      document.getElementById("uploadForm");
+
+
+    const button =
+      document.getElementById("uploadButton");
+
+
+    const status =
+      document.getElementById("status");
+
+
+    const frame =
+      document.getElementById("uploadFrame");
+
+
+    form.addEventListener(
+      "submit",
+      async function(e) {
 
         e.preventDefault();
 
+
         const nama =
-          document.getElementById("nama").value;
+          document.getElementById("nama").value.trim();
+
 
         const prodi =
-          document.getElementById("prodi").value;
+          document.getElementById("prodi").value.trim();
+
 
         const angkatan =
-          document.getElementById("angkatan").value;
+          document.getElementById("angkatan").value.trim();
+
 
         const fileInput =
           document.getElementById("file");
 
+
         const file =
           fileInput.files[0];
 
-        const button =
-          document.getElementById("uploadButton");
 
-        const status =
-          document.getElementById("status");
-
-
-        // Pastikan file dipilih
         if (!file) {
 
           status.innerText =
@@ -176,104 +291,232 @@
         }
 
 
-        // Ubah tampilan tombol
         button.disabled = true;
 
         button.innerText =
           "Mengupload...";
 
+
         status.innerText =
           "Sedang mengupload file...";
 
 
-        // Membaca file
-        const reader =
-          new FileReader();
+        try {
 
 
-        reader.onload = async function() {
+          // Baca file
+          const reader =
+            new FileReader();
 
-          try {
 
-            // Ambil data Base64 dari file
+          reader.onload = function() {
+
+
             const base64File =
               reader.result.split(",")[1];
 
 
-            // Data yang dikirim ke Apps Script
-            const data = {
+            /*
+              Buat form sementara.
+              Form ini dikirim langsung ke
+              Google Apps Script.
+            */
 
-              nama: nama,
-
-              prodi: prodi,
-
-              angkatan: angkatan,
-
-              fileName: file.name,
-
-              mimeType: file.type,
-
-              fileData: base64File
-
-            };
+            const uploadForm =
+              document.createElement("form");
 
 
-            // Kirim ke Google Apps Script
-            await fetch(scriptURL, {
-
-              method: "POST",
-
-              mode: "no-cors",
-
-              headers: {
-
-                "Content-Type":
-                  "text/plain"
-
-              },
-
-              body:
-                JSON.stringify(data)
-
-            });
+            uploadForm.method =
+              "POST";
 
 
-            // Karena no-cors tidak bisa membaca
-            // response dari Google Apps Script,
-            // kita tampilkan pesan berhasil
+            uploadForm.action =
+              scriptURL;
+
+
+            uploadForm.target =
+              "uploadFrame";
+
+
+            uploadForm.enctype =
+              "application/x-www-form-urlencoded";
+
+
+            uploadForm.style.display =
+              "none";
+
+
+            // Nama
+            addField(
+              uploadForm,
+              "nama",
+              nama
+            );
+
+
+            // Prodi
+            addField(
+              uploadForm,
+              "prodi",
+              prodi
+            );
+
+
+            // Angkatan
+            addField(
+              uploadForm,
+              "angkatan",
+              angkatan
+            );
+
+
+            // Nama file
+            addField(
+              uploadForm,
+              "fileName",
+              file.name
+            );
+
+
+            // MIME type
+            addField(
+              uploadForm,
+              "mimeType",
+              file.type ||
+              "application/octet-stream"
+            );
+
+
+            // Data Base64
+            addField(
+              uploadForm,
+              "fileData",
+              base64File
+            );
+
+
+            // Masukkan form ke halaman
+            document.body.appendChild(
+              uploadForm
+            );
+
+
+            // Kirim
+            uploadForm.submit();
+
+
+            /*
+              Jangan langsung reset form.
+              Kita tunggu sebentar agar request
+              punya waktu sampai ke Apps Script.
+            */
+
             status.innerText =
-              "File berhasil dikirim!";
-
-            document
-              .getElementById("uploadForm")
-              .reset();
+              "File sedang dikirim ke server...";
 
 
-          } catch (error) {
-
-            console.error(error);
-
-            status.innerText =
-              "Terjadi kesalahan saat mengupload.";
-
-          }
+            setTimeout(function() {
 
 
-          // Aktifkan tombol kembali
-          button.disabled = false;
+              status.innerText =
+                "Pengiriman selesai. Silakan cek Google Drive dan Spreadsheet.";
+
+
+              button.disabled =
+                false;
+
+
+              button.innerText =
+                "Upload";
+
+
+              /*
+                Form sementara dihapus.
+              */
+
+              uploadForm.remove();
+
+
+            }, 3000);
+
+
+          };
+
+
+          reader.onerror = function() {
+
+            throw new Error(
+              "File gagal dibaca."
+            );
+
+          };
+
+
+          reader.readAsDataURL(file);
+
+
+        } catch (error) {
+
+
+          console.error(error);
+
+
+          status.innerText =
+            "Upload gagal: " +
+            error.message;
+
+
+          button.disabled =
+            false;
+
 
           button.innerText =
             "Upload";
 
-        };
+        }
+
+      }
+    );
 
 
-        // Mulai membaca file
-        reader.readAsDataURL(file);
+    /*
+      Fungsi membuat input tersembunyi
+      untuk form pengiriman.
+    */
 
-      });
+    function addField(
+      form,
+      name,
+      value
+    ) {
+
+
+      const input =
+        document.createElement("input");
+
+
+      input.type =
+        "hidden";
+
+
+      input.name =
+        name;
+
+
+      input.value =
+        value;
+
+
+      form.appendChild(
+        input
+      );
+
+    }
+
 
   </script>
 
+
 </body>
+
 </html>
